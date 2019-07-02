@@ -12,15 +12,40 @@ o2 : string "   OOOO   "
 o3 : string "  O    O  "
 o4 : string " O      O " ; 3 vezes
 
-instruction : string " Enter para fazer a jogada e numeros do    teclado para selecionar a posicao"
+instruction0 : string "-Pressione Espaco Para Iniciar-"
+instruction1 : string " Enter para fazer a jogada e numeros do    teclado para selecionar a posicao"
 
+vetPos : var #9
+
+vetPix : var #10
+	static vetPix + #0, #0
+	static vetPix + #1, #5
+	static vetPix + #2, #15
+	static vetPix + #3, #15
+	static vetPix + #4, #365
+	static vetPix + #5, #375
+	static vetPix + #6, #385
+	static vetPix + #7, #725
+	static vetPix + #8, #735
+	static vetPix + #9, #745
+
+;5   15  25
+;365 375 385
+;725 735 745
 main:
 
+	loadn r0, #525
+	loadn r1, #instruction0
+	loadn r2, #3328
+	
+	call Imprimestr 
+	
 	loadn r0, #560
-	loadn r1, #instruction
+	loadn r1, #instruction1
 	loadn r2, #3584
 	
 	call Imprimestr 
+	
 	call readIni
 
 	halt
@@ -50,8 +75,45 @@ rts
 
 startGame:
 	call clrScrn
-	rts
 	
+	gameLoop:
+		xTime:
+			call printX
+
+rts
+	
+
+printX:
+	push r0
+	push r1 
+	push r2 
+	push r3
+	push r4
+	push r5
+	
+loopPrint:	
+	inchar r3 ;le posição desejada
+	loadn r6, #85
+	outchar r3, r6
+	loadn r4, #vetPos ;carrega o vetor em $r4
+	add r4, r4, r3 ; soma a posição ao vetor
+	loadi r4, r4 ;carrega o conteudo de r4 em r4
+	loadn r5, #0
+	cmp r4,r5
+	
+	jeq loopPrint ;loop se ja estiver ocupado
+	
+	loadn r4, #vetPix ;carrega o vetor em $r4
+	add r4, r4, r3 ; soma a posição ao vetor
+	
+	loadi r0, r4 ;carrega a posiçao de print
+	loadn r1, #x1
+	loadn r2, #2304
+	
+	call Imprimestr
+	jmp loopPrint
+	
+	halt
 	
 clrScrn:
 	push r0
