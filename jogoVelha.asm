@@ -83,6 +83,9 @@ startGame:
 		xTime:
 			loadn r7, #1
 			call turn
+		oTime:
+			loadn r7, #1
+			call turn
 rts
 
 turn:
@@ -112,13 +115,12 @@ loopTurn:
 	
 	call print
 	
-	inchar r3
-	call verifyChange
+	jmp verifyChange
 	halt
 	
 	verifyChange:
-		push r4
 		
+		inchar r3
 		loadn r4, #13
 		
 		cmp r4, r3
@@ -127,8 +129,6 @@ loopTurn:
 		;confirmar
 		loadn r2, #3584
 		call print
-		
-		pop r4
 		rts
 		
 	
@@ -264,7 +264,3 @@ ImprimestrSai:
 	pop r1
 	pop r0
 	rts
-	
-	
-	
-	
