@@ -1,5 +1,9 @@
 jmp main
 
+full: var #1
+
+v0 : string "          "
+
 x1 : string "X        X"
 x2 : string " X      X "
 x3 : string "  X    X  "
@@ -15,22 +19,22 @@ instruction0 : string "-Pressione Espaco Para Iniciar-"
 instruction1 : string " Enter para fazer a jogada e numeros do    teclado para selecionar a posicao"
 
 vetPos : var #10
-	static vetPos + #0, #0
-	static vetPos + #1, #0
-	static vetPos + #2, #0
-	static vetPos + #3, #0
-	static vetPos + #4, #0
-	static vetPos + #5, #0
-	static vetPos + #6, #0
-	static vetPos + #7, #0
-	static vetPos + #8, #0
-	static vetPos + #9, #0
+	static vetPos + #0, #2
+	static vetPos + #1, #2
+	static vetPos + #2, #2
+	static vetPos + #3, #2
+	static vetPos + #4, #2
+	static vetPos + #5, #2
+	static vetPos + #6, #2
+	static vetPos + #7, #2
+	static vetPos + #8, #2
+	static vetPos + #9, #2
 
 vetPix : var #10
 	static vetPix + #0, #0
 	static vetPix + #1, #5
 	static vetPix + #2, #15
-	static vetPix + #3, #15
+	static vetPix + #3, #25
 	static vetPix + #4, #365
 	static vetPix + #5, #375
 	static vetPix + #6, #385
@@ -43,107 +47,152 @@ vetPix : var #10
 ;365 375 385
 ;725 735 745
 
-main:
 
+main:
+	;imprime inst0
 	loadn r0, #525
 	loadn r1, #instruction0
 	loadn r2, #3328
-	
 	call Imprimestr 
 	
+	;imprime inst1
 	loadn r0, #560
 	loadn r1, #instruction1
 	loadn r2, #3584
-	
 	call Imprimestr 
+	
+	init:;le espaço p/ iniciar
+		call keyboard
+		loadn r5, #' '
+		cmp r3, r5
+		ceq startGame
+		halt
 
-	call readIni
-	halt
-
-readIni:
-	push r0
-	push r1
-	loopReadIni:
-		inchar r0
-		loadn r1, #' '
-		cmp r0, r1
-		jne notSpace
-		call startGame
-		jmp readIniEnd
-		notSpace :
-		jmp loopReadIni
-	readIniEnd :
-	pop r1
-	pop r0
-rts
-
+;-------------------------------------startGame------------------------------------------
 startGame:
-	call clrScrn
-	gameLoop:
-		xTime:
-			loadn r7, #1
-			call turn
-		oTime:
-			loadn r7, #1
-			call turn
-rts
+	push r5
+	push r6
+	push r7
+	
+	call clrScrn ;limpa a tela
+	loadn r6, #9 ;r6 guarda 9 para ver se o tabuleiro esta cheio
+	loadn r7, #0
+	loopStart:
+		;verifica se o tabuleiro está cheio
+		loadn r5, #full
+		loadi r5, r5
+		cmp r5, r6
+		jeq endGame
+		
+		call turn
+		not r7, r7 ;if 0, r7 = 1 && if 1, r7 = 0
+		jmp loopStart ;proximo turno
+		
+	endGame:
+		pop r7
+		pop r6
+		pop r5
+		rts
+		
+printDebug:
+	push r6
+	push r7
+	
+	loadn r7, #1
+	loadn r6, #'@'
+	;mov r6, r3
+	;mov r7, r3
+	
+	outchar r6, r7
+	
+	pop r7
+	pop r6
+	rts
 
+;-------------------------------------turn------------------------------------------
 turn:
 	push r0
-	push r1 
-	push r2 
+	push r1
+	push r2
 	push r3
 	push r4
 	push r5
+	push r6
 	
-loopTurn:
-	loadn r3, #5
-	;inchar r3 ;le posição desejada
-	otherTry:
-	loadn r4, #vetPos ;carrega o vetor em $r4
-	add r4, r4, r3 ; soma a posição ao vetor
-	loadi r5, r4 ;carrega $r4 (que o endereço p/ vetPos) em $r5
-	
-	loadn r6, #0
-	cmp r5,r6
-	jne loopTurn ;loop se ja estiver ocupado
-	
-	loadn r4, #vetPix ;carrega o vetor em $r4
-	add r4, r4, r3 ; soma a posição ao vetor
-	loadi r0, r4 ;carrega posicao
-	loadn r2, #256 ;cor de não selecionado
-	
-	call print
-	
-	jmp verifyChange
-	halt
-	
-	verifyChange:
+	loopTurn:
+		call keyboard ;Le posicao
+		newTry:
+		loadn r6, #48 ;subtrai 48 p/ chegar ao numero
+		sub r3, r3, r6
+		loadn r6, #9
+		cmp r3, r6
+		jgr loopTurn ;se posicao > 9, volta
 		
-		inchar r3
-		loadn r4, #13
+		loadn r5, #vetPos
+		add r5, r5, r3 ; soma a posição ao vetor
+		loadi r5, r5 ;carrega a presença na posicao
+		loadn r6, #2
+		cmp r5, r6
+		jne loopTurn ;se hover algo que não seja 2 na posição, volta
 		
-		cmp r4, r3
-		jne otherTry
+		;printar na posição
+		loadn r5, #vetPix
+		add r5, r5, r3 ; soma a posição ao vetor
+		loadi r0, r5
+		loadn r2, #2304 ;cor nao selecionado
+		call print
+		call keyboard
+		call clrSelection
+		loadn r5, #13
+		cmp r3, r5
+		jne newTry
 		
-		;confirmar
 		loadn r2, #3584
 		call print
 		rts
+		;mov r4, r3 ;posicao em r4
 		
+clrSelection:
+	push r0 ;posicao de print
+	push r1 ;string
+	push r4 ;contador
 	
-	;jmp loopPrint
+	loadn r4, #40
 	
+	loadn r1, #v0
+	call Imprimestr
+	
+	add r0, r0, r4
+	call Imprimestr
+	add r0, r0, r4
+	call Imprimestr
+	add r0, r0, r4
+	call Imprimestr
+	add r0, r0, r4
+	call Imprimestr
+	add r0, r0, r4
+	call Imprimestr
+	add r0, r0, r4
+	call Imprimestr
+	add r0, r0, r4
+	call Imprimestr
+	add r0, r0, r4
+	call Imprimestr
+	
+	pop r4
+	pop r1
+	pop r0
+	rts
 print:
 	push r0 ;posicao de print
-	push r3 ;verifica turno do x ou o
+	push r5 ;verifica turno do x ou o
 	push r4	;contador
 	
 	loadn r4, #40
 	
-	loadn r3, #1
-	cmp r3, r7
-	jne oPrint
+	loadn r5, #1
+	cmp r5, r7
+	jeq oPrint
 	
 	;turno do x
 	loadn r1, #x1
@@ -221,12 +270,21 @@ print:
 		jmp endPrint
 		
 	endPrint:
-		pop r0
-		pop r3
 		pop r4
+		pop r5
+		pop r0
 		
 		rts
-		
+
+keyboard:
+	push r5
+	loadn r5, #255
+	keyLoop:
+		inchar r3
+		cmp r3, r5 ;se r3 == 255 ler dnv
+		jeq keyLoop
+	pop r5
+	rts
 	
 clrScrn:
 	push r0
