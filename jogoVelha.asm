@@ -1,6 +1,8 @@
 jmp main
 
 full: var #1
+savePos: var #1
+winner: var #2
 
 v0 : string "          "
 
@@ -17,6 +19,7 @@ o4 : string " O      O " ; essa string deve ser impressa 3 vezes seguidas
 
 instruction0 : string "-Pressione Espaco Para Iniciar-"
 instruction1 : string " Enter para fazer a jogada e numeros do    teclado para selecionar a posicao"
+strWin : string " Ganhou!!"
 
 vetPos : var #10
 	static vetPos + #0, #2
@@ -31,7 +34,7 @@ vetPos : var #10
 	static vetPos + #9, #2
 
 vetPix : var #10
-	static vetPix + #0, #0
+	static vetPix + #0, #25
 	static vetPix + #1, #5
 	static vetPix + #2, #15
 	static vetPix + #3, #25
@@ -62,6 +65,8 @@ main:
 	call Imprimestr 
 	
 	init:;le espaço p/ iniciar
+		loadn r1, #2
+		store winner, r1
 		call keyboard
 		loadn r5, #' '
 		cmp r3, r5
@@ -70,6 +75,8 @@ main:
 
 ;-------------------------------------startGame------------------------------------------
 startGame:
+	push r3
+	push r4
 	push r5
 	push r6
 	push r7
@@ -86,12 +93,19 @@ startGame:
 		
 		call turn
 		not r7, r7 ;if 0, r7 = 1 && if 1, r7 = 0
-		jmp loopStart ;proximo turno
+		
+		call checkWin
+		load r3, winner
+		loadn r4, #2
+		cmp r3, r4
+		jeq loopStart ;proximo turno
 		
 	endGame:
 		pop r7
 		pop r6
 		pop r5
+		pop r4
+		pop r3
 		rts
 		
 printDebug:
@@ -141,17 +155,185 @@ turn:
 		loadi r0, r5
 		loadn r2, #2304 ;cor nao selecionado
 		call print
+		store savePos, r3
 		call keyboard
 		call clrSelection
 		loadn r5, #13
 		cmp r3, r5
 		jne newTry
 		
-		loadn r2, #3584
-		call print
-		rts
-		;mov r4, r3 ;posicao em r4
+		;se a posicao foi selecionada
+		loadn r2, #3328 ;cor rosa p/ o X
+		loadn r5, #0
+		cmp r5, r7
+		jeq endTurn
+		loadn r2, #3584 ; cor AQUA p/ o O
 		
+	endTurn:
+	call print
+	call updateTable
+	
+	pop r6
+	pop r5
+	pop r4
+	pop r3
+	pop r2
+	pop r1
+	pop r0
+	rts
+		
+checkWin:
+	push r0
+	push r1
+	push r2
+	push r3 ;ganhador
+	push r4
+	
+	loadn r3, #2
+	loadn r4, #2
+	
+	loadn r0,#0
+	loadn r1,#1
+	loadn r2,#2
+	call samePlayer
+	cmp r4, r3
+	jne win
+	
+	loadn r0,#3
+	loadn r1,#4
+	loadn r2,#5
+	call samePlayer
+	cmp r4, r3
+	jne win
+	
+	loadn r0,#6
+	loadn r1,#7
+	loadn r2,#8
+	call samePlayer
+	cmp r4, r3
+	jne win
+	
+	loadn r0,#0
+	loadn r1,#3
+	loadn r2,#6
+	call samePlayer
+	cmp r4, r3
+	jne win
+	
+	loadn r0,#1
+	loadn r1,#4
+	loadn r2,#7
+	call samePlayer
+	cmp r4, r3
+	jne win
+	
+	loadn r0,#2
+	loadn r1,#5
+	loadn r2,#8
+	call samePlayer
+	cmp r4, r3
+	jne win
+	
+	loadn r0,#0
+	loadn r1,#4
+	loadn r2,#8
+	call samePlayer
+	cmp r4, r3
+	jne win
+
+	loadn r0,#2
+	loadn r1,#4
+	loadn r2,#6
+	call samePlayer
+	cmp r4, r3
+	jne win
+	
+	pop r4
+	pop r3
+	pop r2
+	pop r1
+	pop r0
+	rts
+	
+	win:
+		store winner, r3
+		
+		loadn r0, #377
+		loadn r1, #strWin
+		loadn r2, #512
+		call Imprimestr
+		
+		loadn r4, #0
+		cmp r3, r4
+		
+		loadn r0, #375
+		loadn r1, #'X'
+		jeq xWon
+		
+		loadn r1, #'O'
+		
+		xWon:
+		outchar r1, r0
+		
+		pop r4
+		pop r3
+		pop r2
+		pop r1
+		pop r0
+		rts
+		
+	
+samePlayer:
+	push r0
+	push r1
+	push r2
+	push r4
+
+	loadn r4, #vetPos
+	
+	add r0, r4, r0
+	loadi r0, r0
+	
+	add r1, r4, r1
+	loadi r1, r1
+	
+	add r2, r4, r2
+	loadi r2, r2
+	
+	cmp r0, r1
+	jne endSame
+	
+	cmp r1, r2
+	jne endSame
+	
+	mov r3, r2
+	
+	endSame:
+	pop r4
+	pop r2
+	pop r1
+	pop r0	
+	rts
+	
+updateTable:
+	push r3
+	push r5
+	push r6
+	
+	load r3, savePos
+	loadn r5, #vetPos
+	add r5, r5, r3
+	storei r5, r7
+	
+	load r5, full
+	inc r5
+	store full, r5
+	
+	pop r6
+	pop r5
+	pop r3
+	rts
+	
 clrSelection:
 	push r0 ;posicao de print
 	push r1 ;string
@@ -190,9 +372,9 @@ print:
 	
 	loadn r4, #40
 	
-	loadn r5, #1
+	loadn r5, #0
 	cmp r5, r7
-	jeq oPrint
+	jne oPrint
 	
 	;turno do x
 	loadn r1, #x1
