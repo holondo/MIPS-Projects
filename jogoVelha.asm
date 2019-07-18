@@ -52,6 +52,7 @@ vetPix : var #10
 
 
 main:
+	call clearVet
 	;imprime inst0
 	loadn r0, #525
 	loadn r1, #instruction0
@@ -70,8 +71,12 @@ main:
 		call keyboard
 		loadn r5, #' '
 		cmp r3, r5
-		ceq startGame
-		halt
+		jne end
+		call startGame
+		jmp main
+		
+		end:
+			halt
 
 ;-------------------------------------startGame------------------------------------------
 startGame:
@@ -101,6 +106,8 @@ startGame:
 		jeq loopStart ;proximo turno
 		
 	endGame:
+		
+		call keyboard
 		pop r7
 		pop r6
 		pop r5
@@ -192,30 +199,37 @@ checkWin:
 	loadn r3, #2
 	loadn r4, #2
 	
-	loadn r0,#0
-	loadn r1,#1
-	loadn r2,#2
+	loadn r0,#1
+	loadn r1,#5
+	loadn r2,#9
 	call samePlayer
 	cmp r4, r3
 	jne win
 	
 	loadn r0,#3
-	loadn r1,#4
-	loadn r2,#5
+	loadn r1,#5
+	loadn r2,#7
 	call samePlayer
 	cmp r4, r3
 	jne win
 	
-	loadn r0,#6
-	loadn r1,#7
-	loadn r2,#8
+	loadn r0,#1
+	loadn r1,#2
+	loadn r2,#3
 	call samePlayer
 	cmp r4, r3
 	jne win
 	
-	loadn r0,#0
-	loadn r1,#3
+	loadn r0,#4
+	loadn r1,#5
 	loadn r2,#6
+	call samePlayer
+	cmp r4, r3
+	jne win
+	
+	loadn r0,#7
+	loadn r1,#8
+	loadn r2,#9
 	call samePlayer
 	cmp r4, r3
 	jne win
@@ -233,17 +247,10 @@ checkWin:
 	call samePlayer
 	cmp r4, r3
 	jne win
-	
-	loadn r0,#0
-	loadn r1,#4
-	loadn r2,#8
-	call samePlayer
-	cmp r4, r3
-	jne win
 
-	loadn r0,#2
-	loadn r1,#4
-	loadn r2,#6
+	loadn r0,#3
+	loadn r1,#6
+	loadn r2,#9
 	call samePlayer
 	cmp r4, r3
 	jne win
@@ -258,7 +265,9 @@ checkWin:
 	win:
 		store winner, r3
 		
-		loadn r0, #377
+		call clrScrn
+		
+		loadn r0, #537
 		loadn r1, #strWin
 		loadn r2, #512
 		call Imprimestr
@@ -266,7 +275,7 @@ checkWin:
 		loadn r4, #0
 		cmp r3, r4
 		
-		loadn r0, #375
+		loadn r0, #535
 		loadn r1, #'X'
 		jeq xWon
 		
@@ -503,4 +512,37 @@ ImprimestrSai:
 	pop r2
 	pop r1
 	pop r0
+	rts
+	
+clearVet:
+	push r1
+	push r2
+	push r3
+	push r4
+	push r5
+	
+	loadn r5, #0 ;igualado
+	
+	store full, r5
+	store savePos, r5
+	
+	loadn r1, #vetPos
+	loadn r2, #1 ;somando
+	loadn r3, #9 ;k
+	loadn r4, #0 ;contador
+	loadn r5, #2 ;igualado
+			
+	loopClear:
+		add r1, r1, r2 ;pos++
+		storei r1, r5
+		
+		add r4, r4, r2 ;i++
+		cmp r4, r3
+		jne loopClear
+		
+	pop r5
+	pop r4
+	pop r3
+	pop r2
+	pop r1
 	rts
